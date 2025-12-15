@@ -1,0 +1,11 @@
+## 5. USE .dockerignore TO REDUCE BUILD CONTEXT
+#target/
+#.mvn/
+#mvnw*
+#src/test/
+#.git/
+#.gitignore
+#README.md
+#*.log
+#.DS_Store
+#node_modules/        # (just in case)
