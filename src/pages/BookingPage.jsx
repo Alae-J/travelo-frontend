@@ -89,7 +89,7 @@ const BookingPage = () => {
       }).toString();
 
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/flights/search?${queryParams}`,
+        `http://localhost:8080/api/flights/search?${queryParams}`,
         {
           method: "GET",
           headers: {
