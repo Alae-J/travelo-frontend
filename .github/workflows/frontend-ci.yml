@@ -3,6 +3,8 @@ name: Frontend CI Pipeline
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
 
@@ -51,6 +53,14 @@ jobs:
 
       - name: Tag and push Docker image
         run: |
+          # Extract version from git tag or use commit SHA
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${{ github.sha }}
+          fi
+
+          docker tag alaej/travelo-frontend:${{ github.sha }} alaej/travelo-frontend:$VERSION
           docker tag alaej/travelo-frontend:${{ github.sha }} alaej/travelo-frontend:latest
-          docker push alaej/travelo-frontend:${{ github.sha }}
+          docker push alaej/travelo-frontend:$VERSION
           docker push alaej/travelo-frontend:latest
