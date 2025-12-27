@@ -34,7 +34,7 @@ const Flights = () => {
     const fetchSeatData = async (flightId) => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/api/seats/${flightId}`
+          `http://localhost:8080/api/seats/${flightId}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -68,7 +68,7 @@ const Flights = () => {
   const handleReserveButtonClick = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/reservations/reserve`,
+        `http://localhost:8080/api/reservations/reserve`,
         {
           method: "POST",
           headers: {
