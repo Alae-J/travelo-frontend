@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: self-hosted
+    container:
+      image: docker:24-cli
+      options: --privileged -v /var/run/docker.sock:/var/run/docker.sock
 
     steps:
       - name: Checkout source code
@@ -34,6 +37,9 @@ jobs:
 
   push:
     runs-on: self-hosted
+    container:
+      image: docker:24-cli
+      options: --privileged -v /var/run/docker.sock:/var/run/docker.sock
     needs: build
 
     steps:
