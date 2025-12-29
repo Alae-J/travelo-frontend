@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: obuntu-latest
     # Only build on main branch or version tags
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     container:
@@ -38,7 +38,7 @@ jobs:
           retention-days: 1
 
   push:
-    runs-on: self-hosted
+    runs-on: obuntu-latest
     container:
       image: docker:24-cli
       options: --privileged -v /var/run/docker.sock:/var/run/docker.sock
