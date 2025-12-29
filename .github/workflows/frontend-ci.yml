@@ -74,7 +74,7 @@ jobs:
           docker push alaej/travelo-frontend:latest
 
   GitOps-k8s-deploy:
-    runs-on: self-hosted
+    runs-on: obuntu-latest
     needs: push
     if: github.ref == 'refs/heads/main'
 
