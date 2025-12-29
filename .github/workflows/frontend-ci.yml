@@ -72,3 +72,36 @@ jobs:
           docker tag alaej/travelo-frontend:${{ github.sha }} alaej/travelo-frontend:latest
           docker push alaej/travelo-frontend:$VERSION
           docker push alaej/travelo-frontend:latest
+
+  GitOps-k8s-deploy:
+    runs-on: self-hosted
+    needs: push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout infra repo
+        uses: actions/checkout@v4
+        with:
+          # Replace with your infra repository if different
+          repository: yassinelamsaaf/travelo-infra
+          token: ${{ secrets.INFRA_REPO_TOKEN }}
+          path: infra
+
+      - name: Update frontend image tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${{ github.sha }}
+          fi
+          echo "Updating infra/travelo-k8s/frontend.yaml to image tag $VERSION"
+          sed -i "s|image: .*alaej/travelo-frontend:.*|image: alaej/travelo-frontend:${VERSION}|" infra/travelo-k8s/frontend.yaml || true
+
+      - name: Commit & push changes
+        run: |
+          cd infra
+          git config user.name "github-actions"
+          git config user.email "ci@github.com"
+          git add travelo-k8s/frontend.yaml
+          git commit -m "ci: update frontend image to ${VERSION}" || echo "no changes to commit"
+          git push origin HEAD:main || echo "push failed"
