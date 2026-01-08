@@ -9,9 +9,55 @@ on:
     branches: ["main"]
 
 jobs:
+  # Enforce code quality and security checks - catches commits that bypassed local hooks
+  validations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for sensitive files
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -qE "(\.env$|\.env\.|credentials\.json|secrets\.yaml|private.*\.key)"; then
+            echo "ERROR: Sensitive files detected in commit!"
+            exit 1
+          fi
+
+      - name: Check for trailing whitespace
+        run: |
+          if git diff --check ${{ github.event.before }} ${{ github.sha }}; then
+            echo "No trailing whitespace found"
+          else
+            echo "ERROR: Trailing whitespace detected!"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx --max-warnings 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install detect-secrets
+        run: pip install detect-secrets
+
+      - name: Run secrets detection
+        run: |
+          detect-secrets scan --baseline .secrets.baseline
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Secrets detected in code!"
+            exit 1
+          fi
+
   build:
     # Only build on main branch or version tags
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    needs: validations
     uses: Alae-J/travelo-ci-templates/.github/workflows/docker-build.yml@main
     with:
       image-name: alaej/travelo-frontend
