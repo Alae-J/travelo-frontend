@@ -12,28 +12,15 @@ permissions:
 
 jobs:
   security-scan:
-    runs-on: ubuntu-latest
     # Only run on PRs, main branch, or commits with [security] tag
     if: |
       github.event_name == 'pull_request' ||
       contains(github.event.head_commit.message, '[security]') ||
       github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          severity: 'HIGH,CRITICAL'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v4
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+    uses: Alae-J/travelo-ci-templates/.github/workflows/security-scan.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      scan-type: fs
+      severity: HIGH,CRITICAL
