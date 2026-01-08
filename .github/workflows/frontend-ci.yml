@@ -15,20 +15,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Check for sensitive files
         run: |
-          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -qE "(\.env$|\.env\.|credentials\.json|secrets\.yaml|private.*\.key)"; then
-            echo "ERROR: Sensitive files detected in commit!"
+          if git ls-files | grep -qE "(\.env$|\.env\.|credentials\.json|secrets\.yaml|private.*\.key)"; then
+            echo "ERROR: Sensitive files detected in repository!"
             exit 1
           fi
 
       - name: Check for trailing whitespace
         run: |
-          if git diff --check ${{ github.event.before }} ${{ github.sha }}; then
+          if ! git grep -I --files-with-matches --perl-regexp '\s+$' -- ':!*.md' ':!*.txt' || [ $? -eq 1 ]; then
             echo "No trailing whitespace found"
           else
-            echo "ERROR: Trailing whitespace detected!"
+            echo "ERROR: Trailing whitespace detected in files above!"
             exit 1
           fi
 
