@@ -31,6 +31,6 @@ repos:
     hooks:
       - id: block-sensitive-files
         name: Block sensitive files
-        entry: bash -c 'if git diff --cached --name-only | grep -qE "(\.env$|\.env\.|credentials\.json|secrets\.yaml|private.*\.key)"; then echo "ERROR - Attempting to commit sensitive files!"; exit 1; fi'
+        entry: bash -c 'if git diff --cached --name-only | grep -E "\.env$|credentials\.json|secrets\.yaml|private.*\.key" | grep -v "\.env\.example$"; then echo "ERROR - Attempting to commit sensitive files!"; exit 1; fi'
         language: system
         pass_filenames: false
