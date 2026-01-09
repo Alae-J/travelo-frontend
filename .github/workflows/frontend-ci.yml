@@ -9,57 +9,34 @@ on:
     branches: ["main"]
 
 jobs:
-  # Enforce code quality and security checks - catches commits that bypassed local hooks
-  validations:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # Phase 1: Static Analysis (run in parallel)
+  sast:
+    name: SAST - Semgrep
+    uses: Alae-J/travelo-ci-templates/.github/workflows/sast-semgrep.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      config: 'p/react,p/javascript,p/owasp-top-ten'
+      fail-on-findings: true
 
-      - name: Check for sensitive files
-        run: |
-          if git ls-files | grep -E "\.env$|credentials\.json|secrets\.yaml|private.*\.key" | grep -v "\.env\.example$"; then
-            echo "ERROR: Sensitive files detected in repository!"
-            exit 1
-          fi
+  sca:
+    name: SCA - npm audit
+    uses: Alae-J/travelo-ci-templates/.github/workflows/sca-npm.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      audit-level: 'moderate'
+      fail-on-findings: true
+    secrets:
+      snyk-token: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Check for trailing whitespace
-        run: |
-          if ! git grep -I --files-with-matches --perl-regexp '\s+$' -- ':!*.md' ':!*.txt' || [ $? -eq 1 ]; then
-            echo "No trailing whitespace found"
-          else
-            echo "ERROR: Trailing whitespace detected in files above!"
-            exit 1
-          fi
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npx eslint src/ --ext .js,.jsx,.ts,.tsx --max-warnings 10
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install detect-secrets
-        run: pip install detect-secrets
-
-      - name: Run secrets detection
-        run: |
-          detect-secrets scan --baseline .secrets.baseline
-          if [ $? -ne 0 ]; then
-            echo "ERROR: Secrets detected in code!"
-            exit 1
-          fi
-
+  # Phase 2: Build (only after security passes)
   build:
-    # Only build on main branch or version tags
+    name: Build Docker Image
+    needs: [sast, sca]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    needs: validations
     uses: Alae-J/travelo-ci-templates/.github/workflows/docker-build.yml@main
     with:
       image-name: alaej/travelo-frontend
@@ -67,8 +44,26 @@ jobs:
       enable-cache: true
       cache-key-file: package-lock.json
 
-  push:
+  # Phase 3: Container Security
+  container-security:
+    name: Container Security - Trivy
     needs: build
+    uses: Alae-J/travelo-ci-templates/.github/workflows/container-security.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      scan-type: image
+      image-name: alaej/travelo-frontend
+      artifact-name: frontend-image
+      severity: 'MEDIUM,HIGH,CRITICAL'
+      fail-on-findings: true
+      scan-dockerfile: true
+
+  # Phase 4: Push (only if security passes)
+  push:
+    name: Push to Docker Hub
+    needs: container-security
     uses: Alae-J/travelo-ci-templates/.github/workflows/docker-push.yml@main
     with:
       image-name: alaej/travelo-frontend
@@ -78,7 +73,9 @@ jobs:
       dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
       dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  GitOps-k8s-deploy:
+  # Phase 5: GitOps Deploy
+  deploy:
+    name: GitOps Deploy to K8s
     needs: push
     if: github.ref == 'refs/heads/main'
     uses: Alae-J/travelo-ci-templates/.github/workflows/gitops-deploy.yml@main
@@ -89,3 +86,17 @@ jobs:
       support-version-tags: true
     secrets:
       infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
+
+  # Phase 6: DAST (post-deploy, non-blocking)
+  dast:
+    name: DAST - OWASP ZAP
+    needs: deploy
+    if: github.ref == 'refs/heads/main'
+    uses: Alae-J/travelo-ci-templates/.github/workflows/dast-zap.yml@main
+    permissions:
+      contents: read
+      security-events: write
+    with:
+      target-url: 'http://localhost:8080'
+      scan-mode: 'baseline'
+      fail-on-findings: false
