@@ -38,3 +38,6 @@ coverage
 # Miscellaneous
 *.log
 .cache
+
+# CI/CD
+actions-runner

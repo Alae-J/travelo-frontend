@@ -85,7 +85,7 @@ jobs:
     with:
       image-name: alaej/travelo-frontend
       yaml-file: frontend.yaml
-      infra-repo: yassinelamsaaf/travelo-infra
+      infra-repo: Alae-J/travelo-infra
       support-version-tags: true
     secrets:
       infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
