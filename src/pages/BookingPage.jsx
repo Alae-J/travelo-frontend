@@ -13,6 +13,8 @@ import PassengerINFO from "../components/PassengerINFO.jsx";
 import TraveloFooter from "../components/TraveloFooter.jsx";
 import Navbar from "../components/Navbar";
 
+// hehe7
+
 const BookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -238,8 +240,9 @@ const BookingPage = () => {
           />
         </div>
         <button
-          className={`SearchButton ${showSearchButton ? "activeSearchButton" : "inactiveSearchButton"
-            }`}
+          className={`SearchButton ${
+            showSearchButton ? "activeSearchButton" : "inactiveSearchButton"
+          }`}
           onClick={() => {
             if (showSearchButton) {
               console.log("Search button clicked. Submitting...");
