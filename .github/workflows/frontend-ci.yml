@@ -17,7 +17,7 @@ jobs:
       contents: read
       security-events: write
     with:
-      config: 'p/react,p/javascript,p/owasp-top-ten'
+      config: "p/react,p/javascript,p/owasp-top-ten"
       fail-on-findings: true
 
   sca:
@@ -27,7 +27,7 @@ jobs:
       contents: read
       security-events: write
     with:
-      audit-level: 'moderate'
+      audit-level: "critical"
       fail-on-findings: true
     secrets:
       snyk-token: ${{ secrets.SNYK_TOKEN }}
@@ -56,7 +56,7 @@ jobs:
       scan-type: image
       image-name: alaej/travelo-frontend
       artifact-name: frontend-image
-      severity: 'MEDIUM,HIGH,CRITICAL'
+      severity: "MEDIUM,HIGH,CRITICAL"
       fail-on-findings: true
       scan-dockerfile: true
 
@@ -97,6 +97,6 @@ jobs:
       contents: read
       security-events: write
     with:
-      target-url: 'http://localhost:8080'
-      scan-mode: 'baseline'
+      target-url: "http://localhost:8080"
+      scan-mode: "baseline"
       fail-on-findings: false
