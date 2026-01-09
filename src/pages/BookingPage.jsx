@@ -12,7 +12,7 @@ import "../index.css";
 import PassengerINFO from "../components/PassengerINFO.jsx";
 import TraveloFooter from "../components/TraveloFooter.jsx";
 import Navbar from "../components/Navbar";
-//
+
 const BookingPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
