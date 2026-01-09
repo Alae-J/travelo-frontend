@@ -88,22 +88,31 @@ const BookingPage = () => {
         }),
       }).toString();
 
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/api/flights/search?${queryParams}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      console.log("DEBUG: REACT_APP_BACKEND_URL =", process.env.REACT_APP_BACKEND_URL);
+      const fullUrl = `${process.env.REACT_APP_BACKEND_URL}/api/flights/search?${queryParams}`;
+      console.log("DEBUG: Full URL being called =", fullUrl);
 
+      const response = await fetch(fullUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("DEBUG: Response status =", response.status);
+      console.log("DEBUG: Response ok =", response.ok);
+      
       if (!response.ok) {
+        const errorText = await response.text();
         console.error("Failed to fetch flights:", response.statusText);
+        console.error("DEBUG: Response body =", errorText);
         return;
       }
 
-      const flights = await response.json();
+      const responseText = await response.text();
+      console.log("DEBUG: Response text =", responseText.substring(0, 200));
+      
+      const flights = JSON.parse(responseText);
       console.log("Fetched Flights:", flights);
 
       if (formData.returnDate) {
