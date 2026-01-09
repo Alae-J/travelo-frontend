@@ -86,16 +86,3 @@ jobs:
       support-version-tags: true
     secrets:
       infra-token: ${{ secrets.INFRA_REPO_TOKEN }}
-
-  # Phase 6: DAST (post-deploy, manual execution)
-  dast:
-    name: DAST - OWASP ZAP (K8s Job)
-    needs: deploy
-    if: github.ref == 'refs/heads/main'
-    uses: Alae-J/travelo-ci-templates/.github/workflows/dast-zap.yml@main
-    permissions:
-      contents: read
-      security-events: write
-    with:
-      namespace: "travelo"
-      skip-scan: true  # Skip in CI, run manually with K8s Job
