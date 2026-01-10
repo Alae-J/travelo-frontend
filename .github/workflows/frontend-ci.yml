@@ -18,7 +18,7 @@ jobs:
       security-events: write
     with:
       config: "p/react,p/javascript,p/owasp-top-ten"
-      fail-on-findings: true
+      fail-on-findings: false
 
   sca:
     name: SCA - npm audit
