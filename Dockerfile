@@ -52,5 +52,11 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
 
+# Create non-root user and switch to it for security
+RUN addgroup -g 101 -S nginx && adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true
+
+# Switch to non-root user
+USER nginx
+
 # Run Nginx in foreground (required for Docker)
 CMD ["nginx", "-g", "daemon off;"]
